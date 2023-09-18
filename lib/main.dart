@@ -46,19 +46,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _children[_currentIndex],
-      /*bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: onTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.fastfood_rounded), label: 'Food'),
-          BottomNavigationBarItem(icon: Icon(Icons.directions_run_rounded), label: 'Workout'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.trending_up), label: 'Supplements'),
-        ],
-      ),*/
+
     );
   }
 }
