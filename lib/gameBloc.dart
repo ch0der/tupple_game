@@ -44,7 +44,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
   GameBloc() : super(GameInitialState());
 
-  @override
   Stream<GameState> mapEventToState(GameEvent event) async* {
     if (event is SubmitGuessEvent) {
       // Handle the logic for submitting a guess

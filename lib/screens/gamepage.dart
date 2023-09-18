@@ -9,16 +9,28 @@ class TestWordGame extends StatefulWidget {
 }
 
 class _TestWordGameState extends State<TestWordGame> {
-
   List<String> selectedLetters = ["", "", "", "", "", ""];
   List<String> sourceLetters = generateWeightedRandomLetters(6);
+  List<bool> isUsedList = List.generate(6, (index) => false);
 
+  void initState() {
+    super.initState();
+  }
 
   void deselectLetter(int index) {
     setState(() {
+      String deselectedLetter = selectedLetters[index];
       selectedLetters[index] = "";
+
+      for (int i = 0; i < sourceLetters.length; i++) {
+        if (sourceLetters[i] == deselectedLetter && isUsedList[i]) {
+          isUsedList[i] = false;
+          break;
+        }
+      }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,6 +41,7 @@ class _TestWordGameState extends State<TestWordGame> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Expanded(child: Container()),
             // Destination Tiles
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -37,12 +50,15 @@ class _TestWordGameState extends State<TestWordGame> {
                   onTap: () {
                     deselectLetter(index);
                   },
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 500),
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: selectedLetters[index].isEmpty ? Colors.grey[300] : Colors.green,
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey[300],
+                      borderRadius: selectedLetters[index].isEmpty
+                          ? BorderRadius.circular(8)
+                          : BorderRadius.circular(8),
                       border: Border.all(color: Colors.black54, width: 1),
                     ),
                     alignment: Alignment.center,
@@ -62,22 +78,27 @@ class _TestWordGameState extends State<TestWordGame> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(6, (index) {
-                GameTile tile = GameTile(letter:sourceLetters[index],placement: index, value: index+1);
-
-                return TileWidget(
+                GameTile tile = GameTile(
+                    letter: sourceLetters[index],
+                    placement: index,
+                    value: index + 1);
+                return (TileWidget(
+                  isSelected: isUsedList[index],
                   tile: tile,
                   onTap: () {
-                    print("Tile ${tile.letter} tapped!");
-                    setState(() {
-                      for (int i = 0; i < selectedLetters.length; i++) {
-                        if (selectedLetters[i] == "") {
-                          selectedLetters[i] = tile.letter;
-                          break;
+                    if (!isUsedList[index]) {
+                      setState(() {
+                        for (int i = 0; i < selectedLetters.length; i++) {
+                          if (selectedLetters[i] == "") {
+                            selectedLetters[i] = tile.letter;
+                            isUsedList[index] = true;
+                            break;
+                          }
                         }
-                      }
-                    });
+                      });
+                    }
                   },
-                );
+                ));
               }),
             ),
           ],
@@ -92,51 +113,46 @@ class GameTile {
   final int placement;
   final int value;
   bool selected;
+  bool isUsed;
 
   GameTile({
     required this.letter,
     required this.placement,
     required this.value,
     this.selected = false,
+    this.isUsed = false,
   });
 }
 
-class TileWidget extends StatefulWidget {
+class TileWidget extends StatelessWidget {
   final GameTile tile;
   final VoidCallback onTap;
+  final bool isSelected;
 
-  TileWidget({required this.tile, required this.onTap});
+  TileWidget(
+      {required this.tile, required this.onTap, required this.isSelected});
 
-  @override
-  _TileWidgetState createState() => _TileWidgetState();
-}
-
-class _TileWidgetState extends State<TileWidget> {
   @override
   Widget build(BuildContext context) {
+    double _opacity = .25;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          widget.tile.selected = !widget.tile.selected;
-        });
-        if (widget.onTap != null) {
-          widget.onTap();
-        }
-      },
-      child: Container(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 250),
         width: 50,
         height: 50,
         decoration: BoxDecoration(
-          color: widget.tile.selected ? Colors.green : Colors.grey[300],
+          color: isSelected ? Colors.grey.withOpacity(_opacity) : Colors.grey.withOpacity(.5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.black54, width: 1),
+          border: Border.all(color: isSelected ? Colors.black54.withOpacity(_opacity) : Colors.black, width: 1),
         ),
         alignment: Alignment.center,
         child: Text(
-          widget.tile.letter,
+          tile.letter,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
+            color: isSelected ? Colors.black.withOpacity(_opacity) : Colors.black,
           ),
         ),
       ),
@@ -146,13 +162,38 @@ class _TileWidgetState extends State<TileWidget> {
 
 List<String> generateWeightedRandomLetters(int count) {
   final allLetters = [
-    'E', 'T', 'A', 'O', 'I', 'N', 'S', 'H', 'R', 'D', 'L', 'C', 'U', 'M', 'W',
-    'F', 'G', 'Y', 'P', 'B', 'V', 'K', 'J', 'X', 'Q', 'Z'
+    'E',
+    'T',
+    'A',
+    'O',
+    'I',
+    'N',
+    'S',
+    'H',
+    'R',
+    'D',
+    'L',
+    'C',
+    'U',
+    'M',
+    'W',
+    'F',
+    'G',
+    'Y',
+    'P',
+    'B',
+    'V',
+    'K',
+    'J',
+    'X',
+    'Q',
+    'Z'
   ];
 
   final weights = [
     13, 9, 8, 8, 7, 7, 6, 6, 6, 4, 4, 3, 3, 3, 3,
-    3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1 // These are not exact frequencies but are based on general trends in the English language.
+    3, 2, 2, 2, 2, 1, 1, 1, .5, 1,
+    1 // These are not exact frequencies but are based on general trends in the English language.
   ];
 
   var random = Random();
@@ -172,5 +213,3 @@ List<String> generateWeightedRandomLetters(int count) {
 
   return selectedLetters;
 }
-
-
