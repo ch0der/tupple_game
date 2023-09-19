@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:tupple_game/widgets/alphabet_scroll.dart';
 
 class TestWordGame extends StatefulWidget {
   const TestWordGame({super.key});
@@ -10,6 +11,7 @@ class TestWordGame extends StatefulWidget {
 
 class _TestWordGameState extends State<TestWordGame> {
   List<String> selectedLetters = ["", "", "", "", "", ""];
+  List<String> hologramLetters = ["", "", "", "", "", ""];
   List<String> sourceLetters = generateWeightedRandomLetters(6);
   List<bool> isUsedList = List.generate(6, (index) => false);
 
@@ -21,7 +23,7 @@ class _TestWordGameState extends State<TestWordGame> {
     setState(() {
       String deselectedLetter = selectedLetters[index];
       selectedLetters[index] = "";
-
+      hologramLetters[index]="";
       for (int i = 0; i < sourceLetters.length; i++) {
         if (sourceLetters[i] == deselectedLetter && isUsedList[i]) {
           isUsedList[i] = false;
@@ -42,6 +44,19 @@ class _TestWordGameState extends State<TestWordGame> {
         child: Column(
           children: [
             Expanded(child: Container()),
+            AlphabetScroll(
+              onLetterSelected: (letter) {
+                print('Selected Letter: $letter');
+                // Do anything you want with the selected letter here
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(6, (index) {
+                return HologramTile(letter: hologramLetters[index]);
+              }),
+            ),
+            SizedBox(height: 10,),
             // Destination Tiles
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -51,15 +66,14 @@ class _TestWordGameState extends State<TestWordGame> {
                     deselectLetter(index);
                   },
                   child: AnimatedContainer(
-                    duration: Duration(milliseconds: 500),
+                    duration: Duration(milliseconds: 300),
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
                       borderRadius: selectedLetters[index].isEmpty
                           ? BorderRadius.circular(8)
-                          : BorderRadius.circular(8),
-                      border: Border.all(color: Colors.black54, width: 1),
+                          : BorderRadius.circular(30),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -73,7 +87,7 @@ class _TestWordGameState extends State<TestWordGame> {
                 );
               }),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             // Source Tiles
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -91,6 +105,13 @@ class _TestWordGameState extends State<TestWordGame> {
                         for (int i = 0; i < selectedLetters.length; i++) {
                           if (selectedLetters[i] == "") {
                             selectedLetters[i] = tile.letter;
+                            // Calculating hologram letter and setting it.
+                            int hologramLetterCode = tile.letter.codeUnitAt(0) + i + 1;
+                            // Check if hologramLetterCode exceeds 'Z'. If so, wrap around.
+                            if (hologramLetterCode > 'Z'.codeUnitAt(0)) {
+                              hologramLetterCode -= 26; // 26 letters in the alphabet
+                            }
+                            hologramLetters[i] = String.fromCharCode(hologramLetterCode);
                             isUsedList[index] = true;
                             break;
                           }
@@ -144,7 +165,6 @@ class TileWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? Colors.grey.withOpacity(_opacity) : Colors.grey.withOpacity(.5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isSelected ? Colors.black54.withOpacity(_opacity) : Colors.black, width: 1),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -159,6 +179,33 @@ class TileWidget extends StatelessWidget {
     );
   }
 }
+class HologramTile extends StatelessWidget {
+  final String letter;
+
+  HologramTile({required this.letter});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.purple[100], // Giving it a distinct color
+        borderRadius: BorderRadius.circular(8),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        letter,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+          color: Colors.purple[700], // Give it a distinct text color too
+        ),
+      ),
+    );
+  }
+}
+
 
 List<String> generateWeightedRandomLetters(int count) {
   final allLetters = [
