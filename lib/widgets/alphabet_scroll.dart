@@ -21,30 +21,29 @@ class _AlphabetScrollState extends State<AlphabetScroll> {
 
   @override
   Widget build(BuildContext context) {
-    double _size = 35;
+    double _size = 45;
     return Container(
-      height: 350,
-      width: 30,
-      child: ListWheelScrollView(
+      height: 60,
+      child: ListView.builder(
 
-
+        scrollDirection: Axis.horizontal,
         controller: _controller,
-        itemExtent: _size,
-        diameterRatio: 1,
-        squeeze: 1.25,
-        magnification: 2,// Adjust for how "curved" you want the wheel to appear// This provides a "snapping" effect
-        onSelectedItemChanged: (int index) {
-          widget.onLetterSelected(_alphabet[index]);
-        },
-        children: _alphabet.map((letter) {
-          return Container(
-            height: 30,
-            width: 30,
-            color: Colors.black12,
-            child: Center(
+        itemCount: _alphabet.length,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              _controller.animateTo(
+                index * _size,
+                duration: Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+              );
+              widget.onLetterSelected(_alphabet[index]);
+            },
+            child: Container(
+              width: _size,
+              alignment: Alignment.center,
               child: Text(
-
-                letter,
+                _alphabet[index],
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -52,7 +51,7 @@ class _AlphabetScrollState extends State<AlphabetScroll> {
               ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }
