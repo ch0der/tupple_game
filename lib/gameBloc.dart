@@ -1,21 +1,23 @@
-// game_bloc.dart
-
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'game_utils.dart';
+
 // Events
 abstract class GameEvent {}
 
 class SubmitGuessEvent extends GameEvent {}
 
-class LoadNewPuzzleEvent extends GameEvent {}
+class LoadNewPuzzleEvent extends GameEvent {
+  final List<String> newPuzzle;
+  LoadNewPuzzleEvent(this.newPuzzle);
+}
 
 class ScrambleWordsEvent extends GameEvent {}
 
 class SelectWordEvent extends GameEvent {
   final String word;
-  SelectWordEvent(this.word);
+  final int index;
+  SelectWordEvent(this.word, this.index);
 }
-
-//... Add other events if needed
 
 // States
 abstract class GameState {}
@@ -24,56 +26,93 @@ class GameInitialState extends GameState {}
 
 class GameUpdatedState extends GameState {
   final List<String> selectedWords;
-  //... other properties if necessary
+  final List<bool> isTileUsedList;
+  final List<String> hologramWords;
 
-  GameUpdatedState(this.selectedWords);
+  GameUpdatedState(this.selectedWords,this.hologramWords,this.isTileUsedList);
 }
+class DeselectLetterEvent extends GameEvent {
+  final int index;
+  DeselectLetterEvent(this.index);
+}
+class AlphabetSelectedEvent extends GameEvent {
+  final String letter;
+
+  AlphabetSelectedEvent(this.letter);
+}
+
+
 
 class GameOverState extends GameState {}
 
-//... Add other states if necessary
-
 // GameBloc
 class GameBloc extends Bloc<GameEvent, GameState> {
+  List<bool> isTileUsedList = List.filled(6, false);
+
   int currentActiveRow = 0;
   int currentPuzzleIndex = 0;
+  List<String> sourceLetters =[];
   List<String> selectedWords = List.filled(6, '');
+  List<String> hologramLetters = List.filled(6, '');
+  List<int> usedTileIndices = List.filled(6, -1);
 
-  // Other game logic variables...
-  //...
-
-  GameBloc() : super(GameInitialState());
-
-  Stream<GameState> mapEventToState(GameEvent event) async* {
-    if (event is SubmitGuessEvent) {
+  GameBloc() : super(GameInitialState()) {
+    on<SubmitGuessEvent>((event, emit) {
       // Handle the logic for submitting a guess
-      // For instance, if the guess is correct, increase the currentActiveRow and update selectedWords
-      // Then, you can yield a new state:
-      yield GameUpdatedState(selectedWords);
+      emit(GameUpdatedState(selectedWords,hologramLetters,isTileUsedList));
 
       // If the game is over:
-      yield GameOverState();
-    } else if (event is LoadNewPuzzleEvent) {
+      emit(GameOverState());
+    });
+
+    on<LoadNewPuzzleEvent>((event, emit) {
       // Handle loading a new puzzle
-      //...
+      List<String> newSourceTiles = generateWeightedRandomLetters(6);
+      List<String> emptyHologram = List.filled(6, '');
+      usedTileIndices.fillRange(0, 6, -1);
+      emit(GameUpdatedState(newSourceTiles,emptyHologram,isTileUsedList));
+    });
+    on<DeselectLetterEvent>((event, emit) {
+      selectedWords[event.index] = "";
+      hologramLetters[event.index] = "";
 
-      yield GameUpdatedState(selectedWords);
-    } else if (event is ScrambleWordsEvent) {
+      if (usedTileIndices[event.index] != -1) {
+        isTileUsedList[usedTileIndices[event.index]] = false;
+        usedTileIndices[event.index] = -1;  // Resetting for future use
+      }
+      print(usedTileIndices);
+
+      emit(GameUpdatedState(selectedWords, hologramLetters, isTileUsedList));
+    });
+
+
+
+
+    on<ScrambleWordsEvent>((event, emit) {
       // Handle word scrambling
-      //...
+      emit(GameUpdatedState(selectedWords,hologramLetters,isTileUsedList));
+    });
 
-      yield GameUpdatedState(selectedWords);
-    } else if (event is SelectWordEvent) {
-      // Handle word selection, based on the word from the event
-      //...
+    on<SelectWordEvent>((event, emit) {
+      // 1. Find the index of the first empty slot in destinationWords
 
-      yield GameUpdatedState(selectedWords);
-    }
+      int firstEmptyIndex = selectedWords.indexOf('');
+      isTileUsedList[event.index] = true;
 
-    // Handle other events...
-    //...
+      // Check if there's any empty slot available
+      if (firstEmptyIndex != -1) {
+        // 2. Set the tapped letter to that index
+        selectedWords[firstEmptyIndex] = event.word;
+
+        int hologramLetterCode = event.word.codeUnitAt(0) + firstEmptyIndex + 1;
+        if (hologramLetterCode > 'Z'.codeUnitAt(0)) {
+          hologramLetterCode -= 26;  // 26 letters in the alphabet
+        }
+        usedTileIndices[firstEmptyIndex] = event.index;
+        hologramLetters[firstEmptyIndex] = String.fromCharCode(hologramLetterCode);
+      }
+
+      emit(GameUpdatedState(selectedWords,hologramLetters,isTileUsedList));
+    });
   }
-
-// Here, you can also add more methods specific to the GameBloc that can be used by external classes.
-// For instance: void resetGame(), void loadRandomPuzzle(), and so on...
 }

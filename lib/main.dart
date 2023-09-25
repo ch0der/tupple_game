@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tupple_game/gameBloc.dart';
 import 'library.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +19,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
       title: 'wordygame', // PulseSphere, SnapZeitgeist
-      home: MainPage(),
+      home: BlocProvider(
+        create: (context) => GameBloc(),
+        child: MainPage(),
+      ),
     );
   }
 }
