@@ -40,6 +40,15 @@ class AlphabetSelectedEvent extends GameEvent {
 
   AlphabetSelectedEvent(this.letter);
 }
+class LetterSelectedFromSourceEvent extends GameEvent {
+  final String letter;
+  LetterSelectedFromSourceEvent(this.letter);
+}
+
+class LetterTappedInScrollerEvent extends GameEvent {
+  final String letter;
+  LetterTappedInScrollerEvent(this.letter);
+}
 
 
 

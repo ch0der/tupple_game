@@ -30,7 +30,6 @@ class _TestWordGameState extends State<TestWordGame> {
         .add(LoadNewPuzzleEvent(generateWeightedRandomLetters(6)));
   }
 
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GameBloc, GameState>(
@@ -49,12 +48,7 @@ class _TestWordGameState extends State<TestWordGame> {
             child: Column(
               children: [
                 Expanded(child: Container()),
-                AlphabetScroll(
-                  selectedLetterNotifier: selectedLetterNotifier,
-                  onLetterSelected: (letter) {
-                    print('Selected Letter: $letter');
-                  },
-                ),
+                AlphabetScroller(alphabet: alphabet),
                 HologramRow(hologramLetters: hologramLetters),
                 SizedBox(height: 10),
                 DestinationTilesRow(
@@ -68,7 +62,11 @@ class _TestWordGameState extends State<TestWordGame> {
                   sourceLetters: sourceLetters,
                   isUsedList: isUsedList,
                   onTileTapped: (tile, index) {
-                    context.read<GameBloc>().add(SelectWordEvent(tile.letter, index));
+                    if (!isUsedList[index]) {
+                      context
+                          .read<GameBloc>()
+                          .add(SelectWordEvent(tile.letter, index));
+                    }
                   },
                 ),
               ],
@@ -76,6 +74,58 @@ class _TestWordGameState extends State<TestWordGame> {
           ),
         );
       },
+    );
+  }
+}
+
+class AlphabetScroller extends StatefulWidget {
+  final List<String> alphabet;
+  AlphabetScroller({Key? key, required this.alphabet}) : super(key: key);
+
+  @override
+  AlphabetScrollerState createState() => AlphabetScrollerState();
+}
+
+class AlphabetScrollerState extends State<AlphabetScroller> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  void scrollToLetter(String letter) {
+    final int index = widget.alphabet.indexOf(letter);
+    _scrollController.jumpTo(index *
+        36.0); // Assuming each item has a width of 36 pixels, adjust accordingly.
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 60,
+      child: ListView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        itemCount: widget.alphabet.length,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              context
+                  .read<GameBloc>()
+                  .add(LetterTappedInScrollerEvent(widget.alphabet[index]));
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                widget.alphabet[index],
+                style: TextStyle(fontSize: 24),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
