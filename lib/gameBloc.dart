@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'game_utils.dart';
+import 'package:riverpod/riverpod.dart';
 
 // Events
 abstract class GameEvent {}
@@ -18,6 +19,27 @@ class SelectWordEvent extends GameEvent {
   final int index;
   SelectWordEvent(this.word, this.index);
 }
+
+
+
+
+class LetterSelectedEvent extends GameEvent {
+  final String letter;
+  LetterSelectedEvent(this.letter);
+}
+class LetterSelectedState extends GameState {
+  final String selectedLetter;
+  LetterSelectedState(this.selectedLetter);
+}
+class LetterScrollerState extends GameState {
+  final String selectedLetter;
+  LetterScrollerState(this.selectedLetter);
+}
+
+
+
+
+
 
 // States
 abstract class GameState {}
@@ -66,6 +88,17 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   List<int> usedTileIndices = List.filled(6, -1);
 
   GameBloc() : super(GameInitialState()) {
+
+
+    on<LetterSelectedEvent>((event, emit) {
+      emit(LetterSelectedState(event.letter));
+    });
+    on<LetterTappedInScrollerEvent>((event, emit) {
+      emit(LetterScrollerState(event.letter));
+    });
+
+
+
     on<SubmitGuessEvent>((event, emit) {
       // Handle the logic for submitting a guess
       emit(GameUpdatedState(selectedWords,hologramLetters,isTileUsedList));

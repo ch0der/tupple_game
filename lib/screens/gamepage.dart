@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'dart:math'as math;
 
 import 'package:tupple_game/game_widgets.dart';
 import 'package:tupple_game/game_utils.dart';
@@ -47,8 +47,10 @@ class _TestWordGameState extends State<TestWordGame> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Expanded(child: Container()),
+                SolveRowLetters(),
+
                 AlphabetScroller(alphabet: alphabet),
+                Expanded(child: Container()),
                 HologramRow(hologramLetters: hologramLetters),
                 SizedBox(height: 10),
                 DestinationTilesRow(
@@ -67,65 +69,15 @@ class _TestWordGameState extends State<TestWordGame> {
                           .read<GameBloc>()
                           .add(SelectWordEvent(tile.letter, index));
                     }
+                    context.read<GameBloc>().add(LetterSelectedEvent(alphabet[index]));
                   },
                 ),
+                Container(height: MediaQuery.of(context).size.height/5,),
               ],
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class AlphabetScroller extends StatefulWidget {
-  final List<String> alphabet;
-  AlphabetScroller({Key? key, required this.alphabet}) : super(key: key);
-
-  @override
-  AlphabetScrollerState createState() => AlphabetScrollerState();
-}
-
-class AlphabetScrollerState extends State<AlphabetScroller> {
-  late ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-  }
-
-  void scrollToLetter(String letter) {
-    final int index = widget.alphabet.indexOf(letter);
-    _scrollController.jumpTo(index *
-        36.0); // Assuming each item has a width of 36 pixels, adjust accordingly.
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 60,
-      child: ListView.builder(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        itemCount: widget.alphabet.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              context
-                  .read<GameBloc>()
-                  .add(LetterTappedInScrollerEvent(widget.alphabet[index]));
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                widget.alphabet[index],
-                style: TextStyle(fontSize: 24),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tupple_game/gameBloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:math'as math;
+import 'game_utils.dart';
 
 class HologramTile extends StatelessWidget {
   final String letter;
@@ -114,7 +116,10 @@ class SourceTilesRow extends StatelessWidget {
           return TileWidget(
             isSelected: isUsedList[index],
             tile: tile,
-            onTap: () => onTileTapped(tile, index),
+            onTap: () {
+              onTileTapped(tile, index);
+              context.read<GameBloc>().add(LetterTappedInScrollerEvent(tile.letter));
+            }
           );
         },
       ),
@@ -174,5 +179,124 @@ class TileWidget extends StatelessWidget {
     );
   }
 }
+class AlphabetScroller extends StatefulWidget {
+  final double _size =60;
+  final List<String> alphabet;
+  AlphabetScroller({Key? key, required this.alphabet}) : super(key: key);
 
+  @override
+  AlphabetScrollerState createState() => AlphabetScrollerState();
+}
+
+class AlphabetScrollerState extends State<AlphabetScroller> {
+  late ScrollController _scrollController;
+  final double _size =60;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  void scrollToLetter(String letter) {
+    final int index = widget.alphabet.indexOf(letter);
+    _scrollController.animateTo(
+      math.max(
+          0.0,
+          math.min(
+              index * _size,
+              _scrollController.position.maxScrollExtent
+          )
+      ),
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );// Assuming each item has a width of 36 pixels, adjust accordingly.
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<GameBloc, GameState>(
+      builder: (context, state){
+        String? selectedLetter;
+        if (state is LetterScrollerState) {
+          selectedLetter = state.selectedLetter;
+          scrollToLetter(state.selectedLetter);
+        }
+        return Container(
+          height: _size,
+          child: ListView.builder(
+            physics: NeverScrollableScrollPhysics(),
+
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            itemCount: widget.alphabet.length,
+            itemBuilder: (context, index) {
+              bool isSelected = widget.alphabet[index] == selectedLetter;
+              return GestureDetector(
+                onTap: () {
+                  context.read<GameBloc>().add(LetterTappedInScrollerEvent(widget.alphabet[index]));
+                },
+                child: Container(
+                  width: _size,
+                  child: Center(
+                    child: Text(
+                      widget.alphabet[index],
+                      style: TextStyle(fontSize: isSelected ? 30 : 20,fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class SolveRowLetters extends StatefulWidget {
+  @override
+  _SolveRowLettersState createState() => _SolveRowLettersState();
+}
+
+class _SolveRowLettersState extends State<SolveRowLetters> {
+  late List<String> letters;
+
+  @override
+  void initState() {
+    super.initState();
+    letters = generateWeightedRandomLetters(6);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.green,width: 2)
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: letters.map((letter) => SolveLetterTile(letter)).toList(),
+      ),
+    );
+  }
+}
+
+
+class SolveLetterTile extends StatelessWidget {
+  final String letter;
+
+  SolveLetterTile(this.letter);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        letter,
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
 
